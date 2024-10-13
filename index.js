@@ -23,7 +23,9 @@ const authenticate = (req, res, next) => {
 
 // route 1: /alert - logs the current time to log.txt
 app.get("/alert", authenticate, (req, res) => {
-  const currentTime = new Date().toLocaleString("pt-br").replace(",", "");
+  const currentTime = new Date()
+    .toLocaleString("pt-br", { timeZone: "America/Sao_Paulo" })
+    .replace(",", "");
   fs.appendFile(LOG_FILE, `${currentTime}\n`, (err) => {
     if (err) {
       console.error("Error writing to log file:", err);
