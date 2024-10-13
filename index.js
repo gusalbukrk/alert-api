@@ -114,6 +114,10 @@ app.get("/", (req, res) => {
   });
 });
 
+app.get("/test", (req, res) => {
+  res.send("OK");
+});
+
 app.listen(PORT, () => {
   // console.log(`Server running at http://localhost:${PORT}`);
   const ipAddress = getLocalIP();
