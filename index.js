@@ -5,10 +5,11 @@ const os = require("os");
 
 const app = express();
 const PORT = 3000;
-const LOG_FILE = path.join(__dirname, "log.txt");
+const ALERT_LOG_FILE = path.join(__dirname, "logs", "alert.log");
+const ALIVE_LOG_FILE = path.join(__dirname, "logs", "alive.log");
 
-const USERNAME = "gus";
-const PASSWORD = "gus";
+const USERNAME = "user";
+const PASSWORD = "pass";
 
 // middleware to validate username and password from query parameters
 const authenticate = (req, res, next) => {
@@ -26,7 +27,7 @@ app.get("/alert", authenticate, (req, res) => {
   const currentTime = new Date()
     .toLocaleString("pt-br", { timeZone: "America/Sao_Paulo" })
     .replace(",", "");
-  fs.appendFile(LOG_FILE, `${currentTime}\n`, (err) => {
+  fs.appendFile(ALERT_LOG_FILE, `${currentTime}\n`, (err) => {
     if (err) {
       console.error("Error writing to log file:", err);
       return res.status(500).send("Error logging the alert");
@@ -35,9 +36,23 @@ app.get("/alert", authenticate, (req, res) => {
   });
 });
 
-// route 2: / (homepage) - displays the log.txt content
+// route 2: /alive - signals that the embedded system is operational
+app.get("/alive", authenticate, (req, res) => {
+  const currentTime = new Date()
+    .toLocaleString("pt-br", { timeZone: "America/Sao_Paulo" })
+    .replace(",", "");
+  fs.appendFile(ALIVE_LOG_FILE, `${currentTime}\n`, (err) => {
+    if (err) {
+      console.error("Error writing to log file:", err);
+      return res.status(500).send("Error logging the alive signal");
+    }
+    res.send("Alive signal logged successfully");
+  });
+});
+
+// route 3: / (homepage) - displays the log.txt content
 app.get("/", (req, res) => {
-  fs.readFile(LOG_FILE, "utf8", (err, data) => {
+  fs.readFile(ALERT_LOG_FILE, "utf8", (err, data) => {
     if (err) {
       console.error("Error reading the log file:", err);
       return res.status(500).send("Error reading the log file");
