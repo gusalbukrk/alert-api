@@ -46,7 +46,7 @@
   <body>
     <h1>Arduino Door Alert System — Logs</h1>
 
-    <h2>Alive signals</h2>
+    <h2>Alives</h2>
     <table>
       <thead>
         <tr>
@@ -54,8 +54,8 @@
           <th>Timestamp</th>
         </tr>
       </thead>
-      <tbody>
-        <% alives.forEach((entry, index) => { %>
+      <tbody id="alivesTableBody">
+        <% logs.alives.forEach((entry, index) => { %>
         <tr>
           <td><%= index + 1 %></td>
           <td><%= entry %></td>
@@ -72,8 +72,8 @@
           <th>Timestamp</th>
         </tr>
       </thead>
-      <tbody>
-        <% alerts.forEach((entry, index) => { %>
+      <tbody id="alertsTableBody">
+        <% logs.alerts.forEach((entry, index) => { %>
         <tr>
           <td><%= index + 1 %></td>
           <td><%= entry %></td>
@@ -81,5 +81,53 @@
         <% }) %>
       </tbody>
     </table>
+    <script>
+      const alerts = "<%= logs.alerts %>".split(",");
+      const alives = "<%= logs.alives %>".split(",");
+
+      const socket = new WebSocket("ws://localhost:3000");
+
+      socket.onopen = () => {
+        console.log("Connected to WebSocket server");
+      };
+
+      socket.onmessage = (event) => {
+        console.log(event);
+        const { type, body } = JSON.parse(event.data);
+
+        if (type === "alerts") {
+          alerts.push(body);
+          alerts.shift();
+          updateTable(type, alerts);
+        } else if (type === "alives") {
+          alives.push(body);
+          alives.shift();
+          updateTable(type, alives);
+        }
+      };
+
+      socket.onclose = () => {
+        console.log("Disconnected from WebSocket server");
+      };
+
+      function updateTable(tableId, entries) {
+        const tableBody = document.getElementById(tableId + "TableBody");
+        tableBody.innerHTML = "";
+
+        entries.forEach((entry, index) => {
+          const row = document.createElement("tr");
+          const numberCell = document.createElement("td");
+          const timestampCell = document.createElement("td");
+
+          numberCell.textContent = tableBody.children.length + 1;
+          timestampCell.textContent = entry;
+
+          row.appendChild(numberCell);
+          row.appendChild(timestampCell);
+
+          tableBody.appendChild(row);
+        });
+      }
+    </script>
   </body>
 </html>

@@ -2,16 +2,42 @@ const express = require("express");
 const fs = require("fs");
 const path = require("path");
 const os = require("os");
+const WebSocket = require("ws");
 
 const app = express();
+app.use(express.json());
+app.use(express.urlencoded());
+app.set("view engine", "ejs");
+app.set("views", path.join(__dirname));
+
 const PORT = 3000;
 const ALERT_LOG_FILE = path.join(__dirname, "logs", "alert.log");
 const ALIVE_LOG_FILE = path.join(__dirname, "logs", "alive.log");
 const USERNAME = "user";
 const PASSWORD = "pass";
 
-app.set("view engine", "ejs");
-app.set("views", path.join(__dirname));
+const server = app.listen(PORT, () => {
+  const ipAddress = getLocalIP();
+  console.log(`Server running at http://${ipAddress}:${PORT}`);
+});
+
+// WebSocket server
+const wss = new WebSocket.Server({ server });
+wss.on("connection", (ws) => {
+  console.log("New client connected");
+
+  ws.on("close", () => {
+    console.log("Client disconnected");
+  });
+});
+//
+function broadcast(obj) {
+  wss.clients.forEach((client) => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(JSON.stringify(obj));
+    }
+  });
+}
 
 const authenticate = (req, res, next) => {
   const { user, pass } = req.query;
@@ -38,26 +64,29 @@ app.get("/", authenticate, parseBooleanQueryParams, (req, res) => {
     view,
   } = req.query;
 
-  const aliveLogs = alives
-    ? fs
-        .readFileSync(ALIVE_LOG_FILE, "utf8")
-        .trim()
-        .split("\n")
-        .slice(-alivesLimit)
-    : [];
-
-  const alertLogs = alerts
-    ? fs
-        .readFileSync(ALERT_LOG_FILE, "utf8")
-        .trim()
-        .split("\n")
-        .slice(-alertsLimit)
-    : [];
+  const logs = {
+    alives: alives
+      ? fs
+          .readFileSync(ALIVE_LOG_FILE, "utf8")
+          .trim()
+          .split("\n")
+          .slice(-alivesLimit)
+      : [],
+    alerts: alerts
+      ? fs
+          .readFileSync(ALERT_LOG_FILE, "utf8")
+          .trim()
+          .split("\n")
+          .slice(-alertsLimit)
+      : [],
+  };
 
   if (view === "html") {
-    res.render("index", { alives: aliveLogs, alerts: alertLogs });
+    res.render("index", {
+      logs,
+    });
   } else {
-    res.json({ aliveLogs, alertLogs });
+    res.json(logs);
   }
 });
 
@@ -73,6 +102,8 @@ app.get("/alive", authenticate, (req, res) => {
     }
     res.send("Alive signal logged successfully");
   });
+
+  broadcast({ type: "alives", body: currentTime });
 });
 
 // logs the current time to logs/alert.log
@@ -87,15 +118,12 @@ app.get("/alert", authenticate, (req, res) => {
     }
     res.send("Alert logged successfully");
   });
+
+  broadcast({ type: "alerts", body: currentTime });
 });
 
 app.get("/test", (req, res) => {
   res.json({ message: "OK" });
-});
-
-app.listen(PORT, () => {
-  const ipAddress = getLocalIP();
-  console.log(`Server running at http://${ipAddress}:${PORT}`);
 });
 
 function getLocalIP() {
