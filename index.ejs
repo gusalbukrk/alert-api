@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Arduino Door Alert System — Logs</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f0f0f0;
+        padding: 20px;
+        width: 50%;
+        margin: 0 auto;
+        padding-bottom: 2rem;
+      }
+      h1 {
+        text-align: center;
+      }
+      h2 {
+        margin-top: 3rem;
+      }
+      table {
+        margin: 0 auto;
+        border-collapse: collapse;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        width: 100%;
+      }
+      td {
+        width: 50%;
+      }
+      th,
+      td {
+        padding: 10px;
+        border-bottom: 1px solid #ddd;
+        text-align: left;
+      }
+      th {
+        background-color: #504caf;
+        color: white;
+      }
+      tr:hover {
+        background-color: lightgray;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Arduino Door Alert System — Logs</h1>
+
+    <h2>Alive signals</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Timestamp</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% alives.forEach((entry, index) => { %>
+        <tr>
+          <td><%= index + 1 %></td>
+          <td><%= entry %></td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+
+    <h2>Alerts</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Timestamp</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% alerts.forEach((entry, index) => { %>
+        <tr>
+          <td><%= index + 1 %></td>
+          <td><%= entry %></td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </body>
+</html>
